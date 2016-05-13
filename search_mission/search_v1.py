@@ -18,6 +18,7 @@ def look_for_target(event):
 	start_time_2 = time.time()	
 	while True:
 		#image processing code here
+		
 		#dummy code
 		if time.time()-start_time_2 > 3*60:
 			event.set()
@@ -245,26 +246,3 @@ def search(vehice, state, home, start_mission, lastDetectedPos, timeLastDetected
 
 
 				atCorner = True
-			
-								
-										 						
-			
-							
-			
-
-
-
-	
-
-
-
-
-					
-											
-							
-	
-
-
-
-	
-	
