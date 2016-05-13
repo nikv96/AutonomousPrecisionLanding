@@ -6,6 +6,8 @@ import threading
 #importing thread pool to use to decipher thread return messages
 from multiprocessing.pool import ThreadPool
 
+from /../TargetAnalyzer import search_img
+
 #states to define different scenarios 
 #State 1 for initial search routine
 #State 2 to search when target lost at destination altitude
@@ -18,19 +20,17 @@ def look_for_target(event):
 	start_time_2 = time.time()	
 	while True:
 		#image processing code here
-		
+		result = search_img.get_target_pos()
 		#dummy code
 		if time.time()-start_time_2 > 3*60:
 			event.set()
 
-def set_angle(property, value):
-{	
+def set_angle(property, value):	
  	try:
 		f = open("/sys/class/rpi-pwm/pwm0/" + property, 'w')
 		f.write(str(angle))
 	except:
 		print("Error writing to: " + property + " value: " + value)
-}
 
 def setServo(property,maxAngle,event):
 			
