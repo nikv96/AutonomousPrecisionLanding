@@ -149,7 +149,7 @@ def search(vehice, state, home, start_mission, lastDetectedPos, timeLastDetected
 					break		
 
 			#time delay to give sufficient time for servos to rotate 360 degrees		
-			if rotateServos("servo, 180, event) == True:
+			if rotateServos("servo, 180, event") == True:
 				print "Target found"
 				return True
 

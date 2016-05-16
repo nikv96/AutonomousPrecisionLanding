@@ -42,10 +42,14 @@ print "Taking off"
 arm_takeoff(vehicle, 10)
 
 #importing required functions
-#need to figure out how to run these functions
-from search_v1 import search
-from descend_v1 import descend
-from land_v1.py import land
+#TODO:need to figure out how to run these functions
+import search_v1
+import descend_v1
+import Land_v1
 
+tgt = search_v1.search()
 
-
+tgt = LocationGlobalRelative(target.lat, target.lon, target_alt)
+vehicle.simple_goto(tgt)
+while vehicle.location.global_frame.alt != target_alt:
+	print "Still landing"
