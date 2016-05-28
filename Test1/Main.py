@@ -1,7 +1,6 @@
 '''
 This code connects the search, track and land and ensures precision landing.
 '''
-
 from dronekit import connect, VehicleMode, LocationGlobalRelative, LocationGlobal, Command
 from dronekit_sitl import SITL
 import time
@@ -30,14 +29,13 @@ if __name__ == '__main__':
 	# Connect to the Vehicle
 	print 'Connecting to vehicle on: %s' % connection_string
 	vehicle = connect(connection_string, wait_ready=True)
-	parent_conn_im, child_conn_im = Pipe()
-	parent_conn_land, child_conn_land = Pipe()
+	parent_conn_im, child_conn_im = multiprocessing.Pipe()
+	parent_conn_land, child_conn_land = multiprocessing.Pipe()
 	land = multiprocessing.Process(name="land",target=control.main, args = (child_conn_land, vehicle,))
 	land.daemon = True
 	img = multiprocessing.Process(name="img",target=search_img.analyze_frame_async, args = (child_conn_im,))
 	img.daemon = True
 	land.start()
-	time.sleep(10)
 	img.start()
 	l = ""
 	while True:

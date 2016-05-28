@@ -133,13 +133,8 @@ def land(vehicle, target):
 	while vehicle.location.global_frame.alt == vehicle.home_location.alt:
 		tgt = search_img()
 		target = LocationGlobalRelative(tgt[0], tgt[1], vehicle.home_location.alt)
-
 		a_error_correction = get_pi(vehicle.location.global_frame.alt - target.alt, time.time())
-
 		a = get_new_a(a_error_correction)
-
 		x_old = a_error_correction
-
 		v = get_new_v(a)
-
 		#set velocity to negative v
