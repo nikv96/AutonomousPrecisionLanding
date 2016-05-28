@@ -235,14 +235,52 @@ def search(vehice, state, home, start_mission, lastDetectedPos, timeLastDetected
 			
 
 				vehicle.simple_goto(target)
-				vehicle.airspeed = 10
-				K_p = 0.0
 				while True:
+					distance = get_distance_metres(vehicle, vehicle.location.global_relatvive_frame, target)
+					print "Distance; ", distance
 					
+					#checking to see if image processing 
+					#thread has found target 					
+					if event.isSet():
+						return True
+					if distance < 1:
+						print "Reached corner " 
+						break
+
+				#setting flag to indicate that drone has already moved to corner
+				atCorner = True
+
+			#once the drone has already moved to a corner		
+			else:
+				#if at the left edge of the rectangle
+				if abs(currentLocation.lon - bLeft.lon) < epsilon and abs(current_location.lat - tLeft.lat) > epsilon:
+					velocity_x = 0
+					velocity_y = 5
 					
+				#if at the top edge
+				elif abs(currentLocation.lat - tLeft.lat) < epsilon and abs(current_location.lon - tRight.lon) > epsilon:
+					velocity_x = 5
+					velocity_y = 0
+						
+				#if at the right edge
+				elif abs(currentLocation.lon-tRight.lon) < epsilon and abs(currentLocation.lat-bRight.lat) > epsilon:
+					velocity_x = 0
+					velocity_y = -5
+					
+				#if at the bottom edge
+				elif abs(currentLocation.lat-bRight.lat) < epsilon and abs(currentLocation.lon-bLeft.lon)> epsilon:				
+					velocity_x = -5
+					velocity_y = 0
+
+				velocity_z = 0
 				
+				if event.isSet():
+					return True
+
+				from flightAssist import send_ned_velocity
+				send_ned_velocity(vehicle, velocity_x, velocity_y, velocity_z, 2)
+	
+	
+					
 
 	
-
-
-				atCorner = True
