@@ -57,12 +57,12 @@ if __name__ == '__main__':
 	while True:
 		location = veh_control.location.global_relative_frame
 		attitude = veh_control.attitude
+		print "Altitude =" + str(veh_control.location.global_relative_frame.alt)
 		
 		if simulation:
 			sim.refresh_simulator(location,attitude)
 			frame = sim.get_frame(attitude)
 			cv2.waitKey(1)
-			print frame
 		else:
 			frame = video.get_frame()
 

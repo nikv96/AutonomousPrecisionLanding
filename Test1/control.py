@@ -30,7 +30,7 @@ def land(veh_control, target_info,attitude,location):
 		last_valid_target = now
 
 	if(inside_landing_area(veh_control) == 1):
-		if(veh_control.location.global_relative_frame.alt < 1):
+		if(veh_control.location.global_relative_frame.alt < 2):
 			veh_control.mode = VehicleMode("LAND")
 		if(target_detected):
 			climbing = False
@@ -46,7 +46,7 @@ def land(veh_control, target_info,attitude,location):
 				if(veh_control.location.global_relative_frame.alt > abort_height):
 					straight_descent(veh_control)
 				else:
-					send_ned_velocity(veh_control,0,0,0,5)
+					send_ned_velocity(veh_control,0,0,0,0.1)
 
 		#there is no known target in landing area
 		else:
@@ -144,26 +144,26 @@ def move_to_target(veh_control,target_info,attitude,location):
 
 
 	#send velocity commands toward target heading
-	send_ned_velocity(veh_control,vx,vy,vz,5)
+	send_ned_velocity(veh_control,vx,vy,vz,0.1)
 
 #autopilot_land - Let the autopilot execute its normal landing procedure
 def autopilot_land(veh_control):
 	#descend velocity
-	send_ned_velocity(veh_control,0,0,0.5,5)
+	send_ned_velocity(veh_control,0,0,0.5,0.1)
 	#veh_control.set_velocity(9999,9999,9999)
 
 #straight_descent - send the vehicle straight down
 def straight_descent(veh_control):
-	send_ned_velocity(veh_control,0,0,0.5,5)
+	send_ned_velocity(veh_control,0,0,0.5,0.1)
 
 #climb - climb to a certain alitude then stop.
 def climb(veh_control):
 	global climbing, climb_altitude
 	if(veh_control.location.global_relative_frame.alt < climb_altitude):
-		send_ned_velocity(veh_control,0,0,-0.5,5)
+		send_ned_velocity(veh_control,0,0,-0.5,0.1)
 		climbing = True
 	else:
-		send_ned_velocity(veh_control,0,0,0,5)
+		send_ned_velocity(veh_control,0,0,0,0.1)
 		climbing = False
 
 
