@@ -31,7 +31,9 @@ def land(veh_control, target_info,attitude,location):
 
 	if(inside_landing_area(veh_control) == 1):
 		if(veh_control.location.global_relative_frame.alt <2):
-			veh_control.mode = VehicleMode("LAND")
+			vNorth = 0.1
+			vZ = 5
+			send_ned_velocity(veh_control, vNorth, 0, vZ, 0.1)
 		if(target_detected):
 			climbing = False
 			initial_descent = False
@@ -127,7 +129,7 @@ def move_to_target(veh_control,target_info,attitude,location):
 
 
 	#distance_to_velocity=0.15
-	speed = target_distance * 0.15
+	speed = target_distance * 2.5
 	#apply max speed limit, max vel = 5
 	speed = min(speed,5)
 
@@ -140,7 +142,7 @@ def move_to_target(veh_control,target_info,attitude,location):
 	if(target_distance > 1):
 		vz = 0
 	else:
-		vz = 1.5
+		vz = 2.5
 
 
 	#send velocity commands toward target heading
