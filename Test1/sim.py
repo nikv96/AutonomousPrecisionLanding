@@ -124,6 +124,7 @@ def get_frame(vehicleAttitude):
 	return sim
 
 def refresh_simulator(vehicleLoc, vehicleAtt):
+	targetLocation.x +=0.1
 	vehicleLocation.set_from_location(vehicleLoc)
 	vehicleAttitude = vehicleAtt
 

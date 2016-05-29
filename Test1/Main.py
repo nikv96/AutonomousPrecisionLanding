@@ -52,7 +52,11 @@ if __name__ == '__main__':
 	else:
 		video.startCamera()
 
-	arm_and_takeoff(veh_control,15)
+	arm_and_takeoff(veh_control,40)
+
+	fourcc = cv2.cv.CV_FOURCC(*'XVID')
+	video  = cv2.VideoWriter('log2.avi', fourcc, 20.0, (640, 480))
+
 	
 	while True:
 		location = veh_control.location.global_relative_frame
@@ -87,13 +91,14 @@ if __name__ == '__main__':
 		#show/record images
 		cv2.imshow("RAW", img)
 		cv2.imshow("GUI", rend_Image)
+		video.write(rend_Image)
 
 		#send commands to autopilot
 		control.land(veh_control, results,attitude,location)
 		if veh_control.armed == False:
 			break
 
-	cv2.destroyAllWindows()
+	video.release()
 		
 	print "Closing vehicle"
 	veh_control.close()
