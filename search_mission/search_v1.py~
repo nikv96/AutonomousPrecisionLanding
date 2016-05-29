@@ -23,13 +23,13 @@ def look_for_target(event):
 			event.set()
 
 def set_angle(property, value):
-{	
+	
  	try:
 		f = open("/sys/class/rpi-pwm/pwm0/" + property, 'w')
 		f.write(str(angle))
 	except:
 		print("Error writing to: " + property + " value: " + value)
-}
+
 
 def setServo(property,maxAngle,event):
 			
@@ -81,13 +81,9 @@ def search(vehice, state, home, start_mission, lastDetectedPos, timeLastDetected
 	set("servo_max", "180")
 	set("active", "1")
 	
-	#initiating camera 	
-	#cam = camera()
-	#cam.start()
+	#float value for comparing coordinates
+	epsilon = 0.00001
 	
-	#adding servos to control position of camera
-	#servo = Servo()
-
 	#threshold time to stay in state 1
 	min_threshold = 2.5
 	
@@ -115,7 +111,7 @@ def search(vehice, state, home, start_mission, lastDetectedPos, timeLastDetected
 				
 				#Execute loop as target is not found
 				while True:
-					if rotateServos("servo",180, event) == True:
+					if rotateServos("servo",180, event):
 						print "Target found"						
 						return True	
 					
@@ -148,7 +144,7 @@ def search(vehice, state, home, start_mission, lastDetectedPos, timeLastDetected
 					break		
 
 			#time delay to give sufficient time for servos to rotate 360 degrees		
-			if rotateServos("servo, 180, event) == True:
+			if rotateServos("servo", 180, event) == True:
 				print "Target found"
 				return True
 
@@ -213,58 +209,68 @@ def search(vehice, state, home, start_mission, lastDetectedPos, timeLastDetected
 				elif d_tl <= shortest_distance:	
 					shortest_distance = d_tl
 
-				elif d_tr <= shortest_distance
+				elif d_tr <= shortest_distance:
 					shortest_distance = d_tr
 
 				target = LocationGlobalRelative(0,0,0)
 				
-				switch(shortest_distance):
-					case d_bl: 
-						target = bLeft
-						break
-					case d_br:
-						target = bRight
-						break
-					case d_tl:
-						target = tLeft
-						break
-					case d_tr:
-						target =tRight
-						break
-			
-
-				vehicle.simple_goto(target)
-				vehicle.airspeed = 10
-				K_p = 0.0
-				while True:
-					
-					
+				if shortest_distance == d_bl: 
+					target = bLeft
 				
-
-	
-
-
-				atCorner = True
-			
-								
-										 						
-			
-							
-			
-
-
-
-	
-
-
-
-
+				elif shortest_distance == d_br:
+					target = bRight
+				
+				elif shortest_distance == d_tl:
+					target = tLeft
 					
-											
-							
-	
+				elif shortest_distance == d_tr:
+					target =tRight
+					
+				vehicle.simple_goto(target)
+				while true:
+					distance = get_distance_metres(vehicle, vehicle.location.global_relatvive_frame, target)
+					print "Distance; ", distance
+					
+					#checking to see if image processing 
+					#thread has found target 					
+					if event.isSet():
+						return True
+					if distance < 1:
+						print "Reached corner " 
+						break
 
 
+				#setting flag to indicate that drone has already moved to corner
+				atCorner = True
 
+			#once the drone has already moved to a corner		
+			else:
+				#if at the left edge of the rectangle
+				if abs(currentLocation.lon - bLeft.lon) < epsilon and abs(current_location.lat - tLeft.lat) > epsilon:
+					velocity_x = 0
+					velocity_y = 5
+					
+				#if at the top edge
+				elif abs(currentLocation.lat - tLeft.lat) < epsilon and abs(current_location.lon - tRight.lon) > epsilon:
+					velocity_x = 5
+					velocity_y = 0
+						
+				#if at the right edge
+				elif abs(currentLocation.lon-tRight.lon) < epsilon and abs(currentLocation.lat-bRight.lat) > epsilon:
+					velocity_x = 0
+					velocity_y = -5
+					
+				#if at the bottom edge
+				elif abs(currentLocation.lat-bRight.lat) < epsilon and abs(currentLocation.lon-bLeft.lon)> epsilon:				
+					velocity_x = -5
+					velocity_y = 0
+
+				velocity_z = 0
+				
+				if event.isSet():
+					return True
+
+				from flightAssist import send_ned_velocity
+				send_ned_velocity(vehicle, velocity_x, velocity_y, velocity_z, 2)
 	
 	

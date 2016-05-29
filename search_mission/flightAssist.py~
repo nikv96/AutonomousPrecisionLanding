@@ -363,8 +363,6 @@ def send_ned_velocity(vehicle, velocity_x, velocity_y, velocity_z, duration):
         vehicle.send_mavlink(msg)
         time.sleep(1)
     
-    
-
 
 def send_global_velocity(vehicle, velocity_x, velocity_y, velocity_z, duration):
     """

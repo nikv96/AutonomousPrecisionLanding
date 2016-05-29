@@ -1,0 +1,7 @@
+from dronekit import vehicle, connect 
+import time
+import math
+
+
+def descend(vehicle, target, start_mission):
+	from flightAssist import 
