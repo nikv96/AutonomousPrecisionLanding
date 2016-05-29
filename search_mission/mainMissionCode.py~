@@ -42,10 +42,12 @@ print "Taking off"
 arm_takeoff(vehicle, 10)
 
 #importing required functions
-#need to figure out how to run these functions
+#TODO:need to figure out how to run these functions
 from search_v1 import search
 from descend_v1 import descend
 from land_v1.py import land
+
+
 
 
 

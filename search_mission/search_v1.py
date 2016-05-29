@@ -6,6 +6,8 @@ import threading
 #importing thread pool to use to decipher thread return messages
 from multiprocessing.pool import ThreadPool
 
+from /../TargetAnalyzer import search_img
+
 #states to define different scenarios 
 #State 1 for initial search routine
 #State 2 to search when target lost at destination altitude
@@ -18,19 +20,17 @@ def look_for_target(event):
 	start_time_2 = time.time()	
 	while True:
 		#image processing code here
+		result = search_img.get_target_pos()
 		#dummy code
 		if time.time()-start_time_2 > 3*60:
 			event.set()
 
-def set_angle(property, value):
-	
+def set_angle(property, value):	
  	try:
 		f = open("/sys/class/rpi-pwm/pwm0/" + property, 'w')
 		f.write(str(angle))
 	except:
 		print("Error writing to: " + property + " value: " + value)
-
-
 def setServo(property,maxAngle,event):
 			
 	#defining constants 
@@ -143,7 +143,7 @@ def search(vehice, state, home, start_mission, lastDetectedPos, timeLastDetected
 					print "At ", z
 					break		
 
-			#time delay to give sufficient time for servos to rotate 360 degrees		
+			#time delay to give sufficient time for servos to rotate 360 degrees
 			if rotateServos("servo", 180, event) == True:
 				print "Target found"
 				return True
@@ -213,7 +213,7 @@ def search(vehice, state, home, start_mission, lastDetectedPos, timeLastDetected
 					shortest_distance = d_tr
 
 				target = LocationGlobalRelative(0,0,0)
-				
+
 				if shortest_distance == d_bl: 
 					target = bLeft
 				
@@ -230,7 +230,27 @@ def search(vehice, state, home, start_mission, lastDetectedPos, timeLastDetected
 				while true:
 					distance = get_distance_metres(vehicle, vehicle.location.global_relatvive_frame, target)
 					print "Distance; ", distance
-					
+
+				switch(shortest_distance):
+					case d_bl: 
+						target = bLeft
+						break
+					case d_br:
+						target = bRight
+						break
+					case d_tl:
+						target = tLeft
+						break
+					case d_tr:
+						target =tRight
+						break
+			
+
+				vehicle.simple_goto(target)
+				while True:
+					distance = get_distance_metres(vehicle, vehicle.location.global_relatvive_frame, target)
+					print "Distance; ", distance
+
 					#checking to see if image processing 
 					#thread has found target 					
 					if event.isSet():
@@ -272,5 +292,8 @@ def search(vehice, state, home, start_mission, lastDetectedPos, timeLastDetected
 
 				from flightAssist import send_ned_velocity
 				send_ned_velocity(vehicle, velocity_x, velocity_y, velocity_z, 2)
-	
+
+					
+
+>>>>>>> 6cf16cb412fff62b84fdca7ae6be9da8f8a0e2d9
 	
