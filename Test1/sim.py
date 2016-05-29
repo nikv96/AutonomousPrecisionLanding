@@ -23,7 +23,7 @@ camera_fov = math.sqrt(camera_vfov**2 + camera_hfov**2)
 camera_frameRate = 30
 current_milli_time = lambda: int(round(time.time() * 1000))
 
-def load_target(filename, actualS=(1.5,1.5)):
+def load_target(filename, actualS=1.5):
 	global target, target_width, target_height
 	global actualSize
 	target = cv2.imread(filename)

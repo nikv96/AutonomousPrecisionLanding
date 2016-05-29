@@ -1,104 +1,187 @@
 from dronekit import connect, VehicleMode, LocationGlobalRelative, LocationGlobal, Command
 import time
 from pymavlink import mavutil
-from flightAssist import get_location_metres
-from flightAssist import get_distance_metres
-import argparse  
+import argparse
+from flightAssist import send_ned_velocity
+from position_vector import PositionVector
+import sim
+import math
 
-def download_mission(vehicle):
-    """
-    Download the current mission from the vehicle.
-    """
-    cmds = vehicle.commands
-    cmds.download()
-    cmds.wait_ready() # wait until download is complete
+abort_height = 30
+search_attempts = 200
+attempts = 0
+climb_altitude = 10
+last_valid_target = None
+target_detected = False
+valid_target = False
+initial_descent = True
+climbing = False
+simulator = True
 
-def adds_square_mission(vehicle, aLocation, aSize):
-    cmds = vehicle.commands
-    print " Clear any existing commands"
-    cmds.clear() 
-    
-    print " Define/add new commands."
-    # Add new commands. The meaning/order of the parameters is documented in the Command class. 
-     
-    #Add MAV_CMD_NAV_TAKEOFF command. This is ignored if the vehicle is already in the air.
-    cmds.add(Command( 0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_TAKEOFF, 0, 0, 0, 0, 0, 0, 0, 0, 10))
-    #Define the four MAV_CMD_NAV_WAYPOINT locations and add the commands
-    point1 = get_location_metres(vehicle, aLocation, aSize, -aSize)
-    point2 = get_location_metres(vehicle, aLocation, aSize, aSize)
-    point3 = get_location_metres(vehicle, aLocation, -aSize, aSize)
-    point4 = get_location_metres(vehicle, aLocation, -aSize, -aSize)
-    cmds.add(Command( 0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, point1.lat, point1.lon, 11))
-    cmds.add(Command( 0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, point2.lat, point2.lon, 12))
-    cmds.add(Command( 0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, point3.lat, point3.lon, 13))
-    cmds.add(Command( 0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, point4.lat, point4.lon, 14))
-    #add dummy waypoint "5" at point 4 (lets us know when have reached destination)
-    cmds.add(Command( 0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, point4.lat, point4.lon, 14))    
-    print " Upload new commands to vehicle"
-    cmds.upload()
+def land(veh_control, target_info,attitude,location):
+	global last_valid_target, target_detected, valid_target, initial_descent, climbing, attempts
+	valid_target = False
+	now = time.time()
+	
+	if target_info[1] is not None:
+		target_detected = True
+		valid_target = True
+		initial_descent = False
+		last_valid_target = now
 
-def distance_to_current_waypoint(vehicle):
+	if(inside_landing_area(veh_control) == 1):
+		if(veh_control.location.global_relative_frame.alt < 1):
+			veh_control.mode = VehicleMode("LAND")
+		if(target_detected):
+			climbing = False
+			initial_descent = False
 
-    """
+			if(valid_target):
+				move_to_target(veh_control,target_info,attitude,location)
 
-    Gets distance in metres to the current waypoint. 
+			else:
+				if(now - last_valid_target > 1.5):
+					target_detected = False
 
-    It returns None for the first waypoint (Home location).
-    """
+				if(veh_control.location.global_relative_frame.alt > abort_height):
+					straight_descent(veh_control)
+				else:
+					send_ned_velocity(veh_control,0,0,0,5)
 
-    nextwaypoint = vehicle.commands.next
-    if nextwaypoint==0:
-        return None
+		#there is no known target in landing area
+		else:
+			if(climbing):
+				climb(veh_control)
 
-    missionitem=vehicle.commands[nextwaypoint-1] #commands are zero indexed
-    lat = missionitem.x
-    lon = missionitem.y
-    alt = missionitem.z
-    targetWaypointLocation = LocationGlobalRelative(lat,lon,alt)
-    distancetopoint = get_distance_metres(vehicle, vehicle.location.global_frame, targetWaypointLocation)
+			#not searching, decide next move
+			else:	
+				#top section of cylinder
+				if(veh_control.location.global_relative_frame.alt > abort_height):
+					#initial descent entering cylinder
+					if(initial_descent):
+						autopilot_land(veh_control)
 
-    return distancetopoint
+					#all other attempts prior to intial target detection
+					else:
+						straight_descent(veh_control)
 
-def main(c, vehicle):
-    #initial location of target 
-    initial_location = vehicle.location.global_frame
-    #adding mission to move in a square path
-    adds_square_mission(vehicle, initial_location, 2.5)
+				#lower section of cylinder
+				else:
+					#we can attempt another land
+					if(attempts < search_attempts):
+						attempts += 1
+						climb(veh_control)
 
-    arm_and_takeoff(vehicle, 5)
-    
-    vehicle.commands.next = 0
-    vehicle.mode = VehicleMode("AUTO")
-    
-    start_time = time.time()
-    i = ""
-    
-    while True:
-        i = c.recv()        
-        if i != None:
-            vehicle.home_location = LocationGlobalRelative(i[0], i[1], vehicle.home_location.alt)
-            break
-    	nextWayPoint = vehicle.commands.next
-    	print "Distance to next waypoint: ", distance_to_current_waypoint(vehicle)
+					else:
+						autopilot_land(veh_control)
 
-    	if nextWayPoint == 3:
-    		vehiclecommands.next = 5
-    	elif nextWayPoint == 5:
-    		vehicle.commands.next = 0
-    	if time.time()-start_time > 10:
-    		break
-    time.sleep(2)
-    
-    print "Mission completed" 
-    vehicle.mode = VehicleMode("RTL")
-    
-    while True:
-    	h = vehicle.location.global_frame.alt
-    	print "Landing...."
-    	print "Altitude: ", h
 
-    	if h<0.1:
-    		print "Landed"
-    		break
+	elif(inside_landing_area(veh_control) == -1):
+		straight_descent(veh_control)
+		target_detected = False
 
-    c.send("exit")
+	else:
+		autopilot_land(veh_control)
+		target_detected = False
+		initial_descent = True
+
+def shift_to_origin(pt,width,height):
+	return ((pt[0] - width/2.0),(-1*pt[1] + height/2.0))
+
+def pixel_point_to_position_xy(pixel_position,distance):
+		thetaX = pixel_position[0] * 48.7 / 640
+		thetaY = pixel_position[1] * 49.7 / 480
+		x = distance * math.tan(math.radians(thetaX))
+		y = distance * math.tan(math.radians(thetaY))
+
+		return (x,y)
+
+#move_to_target - fly aircraft to landing pad
+def move_to_target(veh_control,target_info,attitude,location):
+	x,y = target_info[1]
+	
+	#shift origin to center of image
+	x,y = shift_to_origin((x,y), 640, 480)
+	
+	#this is necessary because the simulator is 100% accurate
+	if(simulator):
+		hfov = 48.7
+		vfov = 49.7
+	else:
+		hfov = 48.7
+		vfov = 49.7
+
+
+	#stabilize image with vehicle attitude
+	x -= (640 / hfov) * math.degrees(attitude.roll)
+	y += (480 / vfov) * math.degrees(attitude.pitch)
+
+
+	#convert to distance
+	X, Y = pixel_point_to_position_xy((x,y),location.alt)
+
+	#convert to world coordinates
+	target_heading = math.atan2(Y,X) % (2*math.pi)
+	target_heading = (attitude.yaw - target_heading) 
+	target_distance = math.sqrt(X**2 + Y**2)
+
+
+	#distance_to_velocity=0.15
+	speed = target_distance * 0.15
+	#apply max speed limit, max vel = 5
+	speed = min(speed,5)
+
+	#calculate cartisian speed
+	vx = speed * math.sin(target_heading) * -1
+	vy = speed * math.cos(target_heading) 
+
+	#only descend when on top of target
+	#descent rate = 0.5
+	if(target_distance > 1):
+		vz = 0
+	else:
+		vz = 0.5
+
+
+	#send velocity commands toward target heading
+	send_ned_velocity(veh_control,vx,vy,vz,5)
+
+#autopilot_land - Let the autopilot execute its normal landing procedure
+def autopilot_land(veh_control):
+	#descend velocity
+	send_ned_velocity(veh_control,0,0,0.5,5)
+	#veh_control.set_velocity(9999,9999,9999)
+
+#straight_descent - send the vehicle straight down
+def straight_descent(veh_control):
+	send_ned_velocity(veh_control,0,0,0.5,5)
+
+#climb - climb to a certain alitude then stop.
+def climb(veh_control):
+	global climbing, climb_altitude
+	if(veh_control.location.global_relative_frame.alt < climb_altitude):
+		send_ned_velocity(veh_control,0,0,-0.5,5)
+		climbing = True
+	else:
+		send_ned_velocity(veh_control,0,0,0,5)
+		climbing = False
+
+
+#inside_landing_area - determine is we are in a landing zone 0 = False, 1 = True, -1 = below the zone
+def inside_landing_area(veh_control):
+
+	vehPos = PositionVector.get_from_location(veh_control.location.global_relative_frame)
+	landPos = sim.targetLocation
+	if(PositionVector.get_distance_xy(vehPos,landPos) < 20):
+		#below area
+		if(vehPos.z < 0.5):
+			return -1
+		#in area
+		else:
+			return 1
+	#outside area
+	else:
+		return 0
+
+if __name__ == "__main__":
+	main()
