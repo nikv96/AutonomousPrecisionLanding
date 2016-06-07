@@ -86,9 +86,7 @@ def simulate_target(thetaX,thetaY,thetaZ, aX, aY, aZ, cX, cY, cZ, camera_height,
 	#project image
 	M = cv2.getPerspectiveTransform(corners,newCorners)
 
-	im = cv2.imread("bg.jpg")
-	im = cv2.resize(im, (640,640))
-	sim = cv2.warpPerspective(target,M,(im.shape[1], im.shape[0]),borderMode = cv2.BORDER_TRANSPARENT)
+	sim = cv2.warpPerspective(target,M,(640,640),borderValue=(0,100,100))
 
 	return sim
 
@@ -124,7 +122,8 @@ def get_frame(vehicleAttitude):
 	return sim
 
 def refresh_simulator(vehicleLoc, vehicleAtt):
-	targetLocation.x +=0.1
+	if vehicleLoc.alt >=2:
+		targetLocation.x +=0.1
 	vehicleLocation.set_from_location(vehicleLoc)
 	vehicleAttitude = vehicleAtt
 

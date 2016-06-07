@@ -6,6 +6,11 @@ from flightAssist import send_ned_velocity
 from position_vector import PositionVector
 import sim
 import math
+import pid
+
+
+x_pid = pid.pid(5.0, 2.0, 1.0, 50)
+y_pid = pid.pid(5.0, 2.0, 1.0, 50)
 
 abort_height = 30
 search_attempts = 200
@@ -50,26 +55,19 @@ def land(veh_control, target_info,attitude,location):
 				else:
 					send_ned_velocity(veh_control,0,0,0,0.1)
 
-		#there is no known target in landing area
 		else:
 			if(climbing):
 				climb(veh_control)
 
-			#not searching, decide next move
 			else:	
-				#top section of cylinder
 				if(veh_control.location.global_relative_frame.alt > abort_height):
-					#initial descent entering cylinder
 					if(initial_descent):
 						autopilot_land(veh_control)
 
-					#all other attempts prior to intial target detection
 					else:
 						straight_descent(veh_control)
 
-				#lower section of cylinder
 				else:
-					#we can attempt another land
 					if(attempts < search_attempts):
 						attempts += 1
 						climb(veh_control)
@@ -102,10 +100,8 @@ def pixel_point_to_position_xy(pixel_position,distance):
 def move_to_target(veh_control,target_info,attitude,location):
 	x,y = target_info[1]
 	
-	#shift origin to center of image
 	x,y = shift_to_origin((x,y), 640, 480)
 	
-	#this is necessary because the simulator is 100% accurate
 	if(simulator):
 		hfov = 48.7
 		vfov = 49.7
@@ -113,39 +109,27 @@ def move_to_target(veh_control,target_info,attitude,location):
 		hfov = 48.7
 		vfov = 49.7
 
-
-	#stabilize image with vehicle attitude
 	x -= (640 / hfov) * math.degrees(attitude.roll)
 	y += (480 / vfov) * math.degrees(attitude.pitch)
 
-
-	#convert to distance
 	X, Y = pixel_point_to_position_xy((x,y),location.alt)
 
-	#convert to world coordinates
 	target_heading = math.atan2(Y,X) % (2*math.pi)
 	target_heading = (attitude.yaw - target_heading) 
 	target_distance = math.sqrt(X**2 + Y**2)
 
+	speedx = target_distance * math.sin(target_heading) 
+	speedx = x_pid.get_pid(speedx, 0.1)
+	speedy = target_distance * math.cos(target_heading)
+	speedy = y_pid.get_pid(speedy, 0.1)
 
-	#distance_to_velocity=0.15
-	speed = target_distance * 2.5
-	#apply max speed limit, max vel = 5
-	speed = min(speed,5)
+	vx = speedx * -1
+	vy = speedy 
 
-	#calculate cartisian speed
-	vx = speed * math.sin(target_heading) * -1
-	vy = speed * math.cos(target_heading) 
-
-	#only descend when on top of target
-	#descent rate = 0.5
 	if(target_distance > 1):
 		vz = 0
 	else:
 		vz = 2.5
-
-
-	#send velocity commands toward target heading
 	send_ned_velocity(veh_control,vx,vy,vz,0.1)
 
 #autopilot_land - Let the autopilot execute its normal landing procedure
@@ -162,7 +146,7 @@ def straight_descent(veh_control):
 def climb(veh_control):
 	global climbing, climb_altitude
 	if(veh_control.location.global_relative_frame.alt < climb_altitude):
-		send_ned_velocity(veh_control,0,0,-0.5,0.1)
+		send_ned_velocity(veh_control,0,0,-5,0.1)
 		climbing = True
 	else:
 		send_ned_velocity(veh_control,0,0,0,0.1)

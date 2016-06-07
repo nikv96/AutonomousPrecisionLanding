@@ -52,7 +52,7 @@ if __name__ == '__main__':
 	else:
 		video.startCamera()
 
-	arm_and_takeoff(veh_control,40)
+	arm_and_takeoff(veh_control,30)
 
 	fourcc = cv2.cv.CV_FOURCC(*'XVID')
 	video  = cv2.VideoWriter('log2.avi', fourcc, 20.0, (640, 480))
