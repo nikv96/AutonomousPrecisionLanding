@@ -43,6 +43,10 @@ if __name__ == '__main__':
 	# Connect to the Vehicle
 	print 'Connecting to vehicle on: %s' % connection_string
 	veh_control = connect(connection_string, wait_ready=True, baud=57600)
+	while True:
+		if veh_control.mode == "GUIDED":
+			break
+	
 	if simulation:
 		print "Running simulation"
 		sim.load_target('target.PNG')
@@ -55,7 +59,7 @@ if __name__ == '__main__':
 	arm_and_takeoff(veh_control,30)
 
 	fourcc = cv2.cv.CV_FOURCC(*'XVID')
-	video  = cv2.VideoWriter('log2.avi', fourcc, 20.0, (640, 480))
+	video  = cv2.VideoWriter('log.avi', fourcc, 30.0, (640, 480))
 
 	
 	while True:

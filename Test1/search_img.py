@@ -7,10 +7,12 @@ import time
 from copy import copy
 
 cam_width = 640
-cam_height = 640
-cam_vfov = 72.42
-cam_hfov = 72.42
-target_cascade = cv2.CascadeClassifier("target2.xml")
+cam_height = 480
+cam_vfov = 48.7
+cam_hfov = 49.7
+target_cascade = cv2.CascadeClassifier(os.path.dirname(os.path.realpath(__file__))+"/target2.xml")
+if target_cascade.empty():
+	exit()
 current_milli_time = lambda: int(round(time.time() * 1000))
 
 def analyze_frame(child_conn, img, location, attitude):
