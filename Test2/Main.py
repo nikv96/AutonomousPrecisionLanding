@@ -42,7 +42,7 @@ if __name__ == '__main__':
 	
 	# Connect to the Vehicle
 	print 'Connecting to vehicle on: %s' % connection_string
-	veh_control = connect(connection_string, wait_ready=True)
+	veh_control = connect(connection_string, wait_ready=True, baud=57600)
 	if simulation:
 		print "Running simulation"
 		sim.load_target('target.PNG')

@@ -2,10 +2,10 @@ import cv2
 import numpy as np
 import multiprocessing
 
-cores_available = 4
+cores_available = multiprocessing.cpu_count()
 
-def image_capture_background(self, imgcap_connection):
-	global latest_image
+def image_capture_background(imgcap_connection):
+	global cap, latest_image
         if imgcap_connection is None:
             print ("image_capture failed because pipe is uninitialised")
             return
@@ -31,10 +31,11 @@ def image_capture_background(self, imgcap_connection):
                 imgcap_connection.send(latest_image)
 
         # release camera when exiting
-        self.camera.release()
+        cap.release()
 
 def startCamera():
 	global cap, parent_conn, imgcap_conn, is_backgroundCap
+	is_backgroundCap=False
 	cap = cv2.VideoCapture(0)
 	cap.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, 640)
 	cap.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, 480)
@@ -43,7 +44,8 @@ def startCamera():
 		print "Cannot open camera"
 		exit(0)
 
-	if(cores_available > 1):
+	if(cores_available > 3):
+		print "BG process"
                 # create pipe
                 parent_conn, imgcap_conn = multiprocessing.Pipe()
                 # create and start the sub process and pass it it's end of the pipe
@@ -57,26 +59,35 @@ def startCamera():
 	print "Camera is opened"
 
 def get_frame():
-	global is_backgroundCap, parent_conn, img_counter
+	global cap, is_backgroundCap, parent_conn, img_counter
 	img_counter =1
-	#grab image from pipe of background capture
         if(is_backgroundCap):
-            # return immediately if pipe is not initialised
             if parent_conn == None:
                 return None
 
-            # send request to image capture for image
             parent_conn.send(img_counter)
 
-            # increment counter for next interation
             img_counter = img_counter + 1
 
-            # wait endlessly until image is returned
             img = parent_conn.recv()
 
         else:
             success_flag, img= cap.read()
 
         return img
-	
 
+def cap_end():
+	global cap
+	print "Releasing camera"
+	cap.release()
+
+if __name__ == "__main__":
+	startCamera()
+	i=1
+	while True:
+		img = get_frame()
+		print"Got image " +str(i)
+		if i==200:
+			break
+		i+=1
+	cap_end()

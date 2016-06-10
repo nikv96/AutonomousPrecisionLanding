@@ -42,7 +42,7 @@ if __name__ == '__main__':
 	
 	# Connect to the Vehicle
 	print 'Connecting to vehicle on: %s' % connection_string
-	veh_control = connect(connection_string, wait_ready=True)
+	veh_control = connect(connection_string, wait_ready=True, baud=57600)
 	if simulation:
 		print "Running simulation"
 		sim.load_target('target.PNG')
@@ -52,10 +52,10 @@ if __name__ == '__main__':
 	else:
 		video.startCamera()
 
-	arm_and_takeoff(veh_control,40)
+	arm_and_takeoff(veh_control, 40)
 
 	fourcc = cv2.cv.CV_FOURCC(*'XVID')
-	video  = cv2.VideoWriter('log2.avi', fourcc, 20.0, (640, 480))
+	video  = cv2.VideoWriter('log.avi', fourcc, 20.0, (640, 480))
 
 	
 	while True:
@@ -89,8 +89,10 @@ if __name__ == '__main__':
 		#overlay gui
 		rend_Image = search_img.add_target_highlights(img, results[3])
 		#show/record images
-		cv2.imshow("RAW", img)
-		cv2.imshow("GUI", rend_Image)
+		if simulation:
+			cv2.imshow("RAW", img)
+			cv2.imshow("GUI", rend_Image)
+		print(rend_Image)
 		video.write(rend_Image)
 
 		#send commands to autopilot
