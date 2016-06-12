@@ -54,17 +54,16 @@ if __name__ == '__main__':
 		print "target loaded"
 		sim.set_target_location(veh_control.location.global_relative_frame)
 		print "target set"
+		arm_and_takeoff(veh_control, 40)
 	else:
 		video.startCamera()
-
-	arm_and_takeoff(veh_control, 40)
 
 	fourcc = cv2.cv.CV_FOURCC(*'XVID')
 	video  = cv2.VideoWriter('log.avi', fourcc, 30.0, (640, 480))
 
 	
 	while True:
-		if not (veh_control.mode == "GUIDED" or veh_control.mode == "LAND"):
+		if not (veh_control.mode == "GUIDED"):
 			break
 		location = veh_control.location.global_relative_frame
 		attitude = veh_control.attitude
