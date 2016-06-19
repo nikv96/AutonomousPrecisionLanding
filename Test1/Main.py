@@ -47,7 +47,7 @@ if __name__ == '__main__':
 	while True:
 		if veh_control.mode == "GUIDED":
 			break
-	
+		time.sleep(0.1)
 	if simulation:
 		print "Running simulation"
 		sim.load_target('target.PNG')
@@ -59,7 +59,7 @@ if __name__ == '__main__':
 		video.startCamera()
 
 	fourcc = cv2.cv.CV_FOURCC(*'XVID')
-	video  = cv2.VideoWriter('log.avi', fourcc, 30.0, (640, 480))
+	vid  = cv2.VideoWriter('log.avi', fourcc, 30.0, (640, 480))
 
 	
 	while True:
@@ -99,14 +99,13 @@ if __name__ == '__main__':
 			cv2.imshow("RAW", img)
 			cv2.imshow("GUI", rend_Image)
 		print(rend_Image)
-		video.write(rend_Image)
+		vid.write(rend_Image)
 
 		#send commands to autopilot
 		control.land(veh_control, results,attitude,location)
-		if veh_control.armed == False:
-			break
+		time.sleep(0.1)
 
-	video.release()
+	vid.release()
 		
 	print "Closing vehicle"
 	veh_control.close()
