@@ -43,6 +43,9 @@ if __name__ == '__main__':
 	# Connect to the Vehicle
 	print 'Connecting to vehicle on: %s' % connection_string
 	veh_control = connect(connection_string, wait_ready=True, baud=57600)
+	
+	if simulation:
+		veh_control.mode = VehicleMode("GUIDED")
 
 	while True:
 		if veh_control.mode == "GUIDED":
@@ -52,9 +55,10 @@ if __name__ == '__main__':
 		print "Running simulation"
 		sim.load_target('target.PNG')
 		print "target loaded"
-		sim.set_target_location(veh_control.location.global_relative_frame)
+		target = LocationGlobalRelative(veh_control.location.global_relative_frame.lat+0.00002, veh_control.location.global_relative_frame.lon - 0.00002, veh_control.location.global_relative_frame.alt)
+		sim.set_target_location(target)
 		print "target set"
-		arm_and_takeoff(veh_control, 40)
+		arm_and_takeoff(veh_control, 10)
 	else:
 		video.startCamera()
 
@@ -98,7 +102,6 @@ if __name__ == '__main__':
 		if simulation:
 			cv2.imshow("RAW", img)
 			cv2.imshow("GUI", rend_Image)
-		print(rend_Image)
 		vid.write(rend_Image)
 
 		#send commands to autopilot

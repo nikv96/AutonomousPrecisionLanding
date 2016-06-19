@@ -19,8 +19,8 @@ initial_descent = True
 climbing = False
 simulator = True
 
-x_pid = pid.pid(5.0, 2.0, 1.0, 50)
-y_pid = pid.pid(5.0, 2.0, 1.0, 50)
+x_pid = pid.pid(0.2, 0.2, 0.2, 50)
+y_pid = pid.pid(0.2, 0.2, 0.2, 50)
 
 def land(veh_control, target_info,attitude,location):
 	global last_valid_target, target_detected, valid_target, initial_descent, climbing, attempts
@@ -33,61 +33,51 @@ def land(veh_control, target_info,attitude,location):
 		initial_descent = False
 		last_valid_target = now
 
-	if(inside_landing_area(veh_control) == 1):
-		if(veh_control.location.global_relative_frame.alt <2):
-			veh_control.mode = VehicleMode("LAND")
-		if(target_detected):
-			climbing = False
-			initial_descent = False
+	if(veh_control.location.global_relative_frame.alt <2):
+		veh_control.mode = VehicleMode("LAND")
 
-			if(valid_target):
-				move_to_target(veh_control,target_info,attitude,location)
+	if(target_detected):
+		climbing = False
+		initial_descent = False
 
-			else:
-				if(now - last_valid_target > 1.5):
-					target_detected = False
+		if(valid_target):
+			move_to_target(veh_control,target_info,attitude,location)
 
-				if(veh_control.location.global_relative_frame.alt > abort_height):
-					straight_descent(veh_control)
-				else:
-					send_ned_velocity(veh_control,0,0,0,0.1)
-
-		#there is no known target in landing area
 		else:
-			if(climbing):
-				climb(veh_control)
+			if(now - last_valid_target > 1.5):
+				target_detected = False
 
-			#not searching, decide next move
-			else:	
-				#top section of cylinder
-				if(veh_control.location.global_relative_frame.alt > abort_height):
-					#initial descent entering cylinder
-					if(initial_descent):
-						autopilot_land(veh_control)
+			if(veh_control.location.global_relative_frame.alt > abort_height):
+				straight_descent(veh_control)
+			else:
+				send_ned_velocity(veh_control,0,0,0,0.1)
 
-					#all other attempts prior to intial target detection
-					else:
-						straight_descent(veh_control)
-
-				#lower section of cylinder
-				else:
-					#we can attempt another land
-					if(attempts < search_attempts):
-						attempts += 1
-						climb(veh_control)
-
-					else:
-						autopilot_land(veh_control)
-
-
-	elif(inside_landing_area(veh_control) == -1):
-		straight_descent(veh_control)
-		target_detected = False
-
+	#there is no known target in landing area
 	else:
-		autopilot_land(veh_control)
-		target_detected = False
-		initial_descent = True
+		if(climbing):
+			climb(veh_control)
+
+		#not searching, decide next move
+		else:	
+			#top section of cylinder
+			if(veh_control.location.global_relative_frame.alt > abort_height):
+				#initial descent entering cylinder
+				if(initial_descent):
+					autopilot_land(veh_control)
+
+				#all other attempts prior to intial target detection
+				else:
+					straight_descent(veh_control)
+
+			#lower section of cylinder
+			else:
+				#we can attempt another land
+				if(attempts < search_attempts):
+					attempts += 1
+					climb(veh_control)
+
+				else:
+					autopilot_land(veh_control)
 
 def shift_to_origin(pt,width,height):
 	return ((pt[0] - width/2.0),(-1*pt[1] + height/2.0))
@@ -129,22 +119,25 @@ def move_to_target(veh_control,target_info,attitude,location):
 
 	vx = speedx * -1
 	vy = speedy 
+	
+	vx = min(vx, 5)
+	vy = min(vy, 5)
+	print "vx = " + str(vx)
+	print "vy = " + str(vy)
 
 	if(target_distance > 1):
 		vz = 0
 	else:
-		vz = 2.5
+		vz = 0.5
 	send_ned_velocity(veh_control,vx,vy,vz,0.1)
 
 #autopilot_land - Let the autopilot execute its normal landing procedure
 def autopilot_land(veh_control):
-	#descend velocity
-	send_ned_velocity(veh_control,0,0,0.5,0.1)
-	#veh_control.set_velocity(9999,9999,9999)
+	send_ned_velocity(veh_control,0,0,0.2,0.1)
 
 #straight_descent - send the vehicle straight down
 def straight_descent(veh_control):
-	send_ned_velocity(veh_control,0,0,0.5,0.1)
+	send_ned_velocity(veh_control,0,0,0.2,0.1)
 
 #climb - climb to a certain alitude then stop.
 def climb(veh_control):
@@ -155,23 +148,6 @@ def climb(veh_control):
 	else:
 		send_ned_velocity(veh_control,0,0,0,0.1)
 		climbing = False
-
-
-#inside_landing_area - determine is we are in a landing zone 0 = False, 1 = True, -1 = below the zone
-def inside_landing_area(veh_control):
-
-	vehPos = PositionVector.get_from_location(veh_control.location.global_relative_frame)
-	landPos = sim.targetLocation
-	if(PositionVector.get_distance_xy(vehPos,landPos) < 20):
-		#below area
-		if(vehPos.z < 0.5):
-			return -1
-		#in area
-		else:
-			return 1
-	#outside area
-	else:
-		return 0
 
 if __name__ == "__main__":
 	main()

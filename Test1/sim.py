@@ -16,7 +16,7 @@ backgroundColor = (74,88,109)
 filename = 'target.PNG'
 target_size = 1.5
 camera_width = 640
-camera_height = 640
+camera_height = 480
 camera_vfov = 60
 camera_hfov = 60
 camera_fov = math.sqrt(camera_vfov**2 + camera_hfov**2)
@@ -87,8 +87,8 @@ def simulate_target(thetaX,thetaY,thetaZ, aX, aY, aZ, cX, cY, cZ, camera_height,
 	M = cv2.getPerspectiveTransform(corners,newCorners)
 
 	im = cv2.imread("bg.jpg")
-	im = cv2.resize(im, (640,640))
-	sim = cv2.warpPerspective(target,M,(im.shape[1], im.shape[0]),borderMode = cv2.BORDER_TRANSPARENT)
+	im = cv2.resize(im, (640,480))
+	sim = cv2.warpPerspective(target,M,(640, 480),borderValue=(74,88,109))
 
 	return sim
 
