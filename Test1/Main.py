@@ -68,6 +68,11 @@ if __name__ == '__main__':
 	
 	while True:
 		if not (veh_control.mode == "GUIDED"):
+			if simulation:
+				break
+			else:
+				continue
+		if not (veh_control.armed):
 			break
 		location = veh_control.location.global_relative_frame
 		attitude = veh_control.attitude
@@ -113,4 +118,4 @@ if __name__ == '__main__':
 	print "Closing vehicle"
 	veh_control.close()
 	if sitl is not None:
-		sitl.close()
+		sitl.stop()

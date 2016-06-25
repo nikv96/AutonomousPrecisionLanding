@@ -19,8 +19,8 @@ initial_descent = True
 climbing = False
 simulator = True
 
-x_pid = pid.pid(0.2, 0.2, 0.2, 50)
-y_pid = pid.pid(0.2, 0.2, 0.2, 50)
+x_pid = pid.pid(0.1, 0.005, 0.1, 50)
+y_pid = pid.pid(0.1, 0.005, 0.1, 50)
 
 def land(veh_control, target_info,attitude,location):
 	global last_valid_target, target_detected, valid_target, initial_descent, climbing, attempts
@@ -128,7 +128,7 @@ def move_to_target(veh_control,target_info,attitude,location):
 	if(target_distance > 1):
 		vz = 0
 	else:
-		vz = 0.5
+		vz = 0.2
 	send_ned_velocity(veh_control,vx,vy,vz,0.1)
 
 #autopilot_land - Let the autopilot execute its normal landing procedure
@@ -143,7 +143,7 @@ def straight_descent(veh_control):
 def climb(veh_control):
 	global climbing, climb_altitude
 	if(veh_control.location.global_relative_frame.alt < climb_altitude):
-		send_ned_velocity(veh_control,0,0,-0.5,0.1)
+		send_ned_velocity(veh_control,0,0,-0.25,0.1)
 		climbing = True
 	else:
 		send_ned_velocity(veh_control,0,0,0,0.1)
