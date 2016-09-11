@@ -28,6 +28,8 @@ hfov = 60
 hres = 640
 vfov = 60
 vres = 480
+x_pre = 0
+y_pre = 0
 
 def pixels_per_meter(fov, res, alt):
 	return ( ( alt * math.tan(math.radians(fov/2)) ) / (res/2) )
@@ -55,10 +57,10 @@ def move_to_target(vehicle,target,attitude,location):
 	vx = x_pid.get_pid(x, 0.1)
 	vy = y_pid.get_pid(y, 0.1)
 	
-	print "x = " + str(x)
-	print "vx = " + str(vx)
-	print "y = " + str(y)
-	print "vy = " + str(vy)
+	print("x = " + str(x))
+	print("vx = " + str(vx))
+	print("y = " + str(y))
+	print("vy = " + str(vy))
 
 	if(math.sqrt(x**2 + y**2) > 2):
 		vz = 0

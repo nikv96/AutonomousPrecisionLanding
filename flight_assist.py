@@ -15,6 +15,22 @@ import time
 import math
 
 
+def epm_engage(vehicle):
+    """
+    Engage EPM
+    """
+    msg = vehicle.message_factory.command_long_encode(
+        0, 0,
+        mavutil.mavlink.MAV_CMD_DO_SET_SERVO,
+        0,
+        10,
+        1100,
+        0,
+        0,
+        0, 0, 0)
+
+    vehicle.send_mavlink(msg)
+
 def download_mission(vehicle):
     """
     Download the current mission from the vehicle.
@@ -395,8 +411,6 @@ def send_velocity(vehicle, velocity_y, velocity_x, velocity_z, duration):
     for x in range(0,duration):
         vehicle.send_mavlink(msg)
         time.sleep(0.1)
-    
-
 
 def send_global_velocity(vehicle, velocity_x, velocity_y, velocity_z, duration):
     """
