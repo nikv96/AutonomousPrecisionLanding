@@ -1,3 +1,11 @@
+'''
+
+    Synopsis: PID controller code
+    Author: Daniel Nugent
+    Code Available at https://github.com/djnugent/Precland/blob/master/Common/VN_position_vector.py used under the GNU license
+
+'''
+
 import math
 from dronekit import LocationGlobalRelative
 

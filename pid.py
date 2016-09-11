@@ -1,3 +1,12 @@
+'''
+
+    Synopsis: PID controller code
+    Author: Daniel Nugent
+    Code Available at https://github.com/djnugent/Precland/blob/master/Common/PID.py used under the GNU license
+
+'''
+
+#Python Imports
 import math
 import time
 
@@ -54,15 +63,15 @@ class pid(object):
 
     def main(self):
         print "Test PID: %s" % test_pid
-	result = 1000000000000
-	while not (result > -2.220446049250313e-16 and result < 2.220446049250313e-16):
-		for i in [-0.0212854090294,-0.037991442082]:
-		    result_p = test_pid.get_p(i)
-		    result_i = test_pid.get_i(i, 0.1)
-		    result_d = test_pid.get_d(i, 0.1)
-		    result = result_p + result_i + result_d
-		    print str(i)
-		    print "Err %s, Result: %f (P:%f, I:%f, D:%f, Int:%f)" % (i, result, result_p, result_i, result_d, self.get_integrator())
+    	result = 1000000000000
+    	while not (result > -2.220446049250313e-16 and result < 2.220446049250313e-16):
+    		for i in [-0.0212854090294,-0.037991442082]:
+    		    result_p = test_pid.get_p(i)
+    		    result_i = test_pid.get_i(i, 0.1)
+    		    result_d = test_pid.get_d(i, 0.1)
+    		    result = result_p + result_i + result_d
+    		    print(str(i))
+    		    print("Error: %s, Result: %f (P:%f, I:%f, D:%f, Int:%f)" % (i, result, result_p, result_i, result_d, self.get_integrator()))
 
 if __name__ == "__main__":
     test_pid = pid(2.0, 0.5, 0.01, 50)

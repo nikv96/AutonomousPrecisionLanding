@@ -1,6 +1,16 @@
+'''
+
+    Synopsis: Helper functions.
+    Author: Rahul Nambiar
+    Contact: mailto:rahul010@e.ntu.edu.sg
+
+'''
+
+#Dronekit Imports
 from dronekit import connect, VehicleMode, LocationGlobal, LocationGlobalRelative
 from pymavlink import mavutil 
 
+#Python Imports
 import time 
 import math
 

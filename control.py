@@ -1,13 +1,27 @@
+'''
+
+	Synopsis: Script to run the control algorithm.
+	Author: Nikhil Venkatesh
+	Contact: mailto:nikv96@gmail.com
+
+'''
+
+#Dronekit Imports
 from dronekit import connect, VehicleMode, LocationGlobalRelative, LocationGlobal, Command
-import time
 from pymavlink import mavutil
-import argparse
-from flightAssist import send_ned_velocity
+
+#Common Library Imports
+from flight_assist import send_ned_velocity
 from position_vector import PositionVector
 import pid
 import sim
-import math
 
+#Python Imports
+import math
+import time
+import argparse
+
+#Global Variables
 abort_height = 30
 search_attempts = 200
 attempts = 0
@@ -52,26 +66,17 @@ def land(veh_control, target_info,attitude,location):
 			else:
 				send_ned_velocity(veh_control,0,0,0,0.1)
 
-	#there is no known target in landing area
 	else:
 		if(climbing):
 			climb(veh_control)
-
-		#not searching, decide next move
-		else:	
-			#top section of cylinder
+		else:
 			if(veh_control.location.global_relative_frame.alt > abort_height):
-				#initial descent entering cylinder
 				if(initial_descent):
 					autopilot_land(veh_control)
-
-				#all other attempts prior to intial target detection
 				else:
 					straight_descent(veh_control)
 
-			#lower section of cylinder
 			else:
-				#we can attempt another land
 				if(attempts < search_attempts):
 					attempts += 1
 					climb(veh_control)
@@ -90,7 +95,6 @@ def pixel_point_to_position_xy(pixel_position,distance):
 
 		return (x,y)
 
-#move_to_target - fly aircraft to landing pad
 def move_to_target(veh_control,target_info,attitude,location):
 	x,y = target_info[1]
 	
@@ -131,15 +135,12 @@ def move_to_target(veh_control,target_info,attitude,location):
 		vz = 0.2
 	send_ned_velocity(veh_control,vx,vy,vz,0.1)
 
-#autopilot_land - Let the autopilot execute its normal landing procedure
 def autopilot_land(veh_control):
 	send_ned_velocity(veh_control,0,0,0.2,0.1)
 
-#straight_descent - send the vehicle straight down
 def straight_descent(veh_control):
 	send_ned_velocity(veh_control,0,0,0.2,0.1)
 
-#climb - climb to a certain alitude then stop.
 def climb(veh_control):
 	global climbing, climb_altitude
 	if(veh_control.location.global_relative_frame.alt < climb_altitude):
