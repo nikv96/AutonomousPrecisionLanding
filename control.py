@@ -24,7 +24,7 @@ import argparse
 #Global Variables
 x_pid = pid.pid(0.1, 0.005, 0.1, 50)
 y_pid = pid.pid(0.1, 0.005, 0.1, 50)
-z_pid = pid.pid(0.3, 0.005, 0.2, 50)
+z_pid = pid.pid(0.2, 0.005, 0.1, 50)
 hfov = 60
 hres = 640
 vfov = 60
@@ -43,7 +43,7 @@ def land(vehicle, target, attitude, location):
 	elif(vehicle.location.global_relative_frame.alt > 30):
 		vehicle.mode = VehicleMode('LAND')
 	else:
-		send_velocity(vehicle, 0, 0, -0.25, 1)
+		send_velocity(vehicle, 0, 0, -0.5, 1)
 		
 def move_to_target(vehicle,target,attitude,location):
 	x,y = target
