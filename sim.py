@@ -36,7 +36,9 @@ camera_fov = math.sqrt(camera_vfov**2 + camera_hfov**2)
 camera_frameRate = 30
 current_milli_time = lambda: int(round(time.time() * 1000))
 a = 10
-d = 0
+t = 0
+init_x = 0
+init_y = 0
 
 def load_target(filename, actualS=1.5):
 	global target, target_width, target_height
@@ -116,17 +118,16 @@ def get_frame(vehicleAttitude):
 	return sim
 
 def refresh_simulator(vehicleLoc, vehicleAtt):
-	global d, init_x, init_y
+	global t, init_x, init_y
 	vehicleLocation.set_from_location(vehicleLoc)
 	vehicleAttitude = vehicleAtt
-	sin2t = math.sin(d*math.pi/180)**2 + 1
-	x = (a * math.cos(d*math.pi/180))/sin2t + init_x
-	y = (a * math.cos(d*math.pi/180) * math.sin(d * math.pi/180))/sin2t + init_y
-	d = d + 3
+	sin_square = math.sin(t * math.pi/180)**2 + 1
+	x = (a * math.cos(t * math.pi/180))/sin_square + init_x
+	y = (a * math.cos(t * math.pi/180) * math.sin(t * math.pi/180))/sin_square + init_y
+	t = t + 0.5
 	targetLocation.x, targetLocation.y= x, y
 
 if __name__ == '__main__':
-	global init_x, init_y
 	import flight_assist
 	load_target(filename, target_size)
 	sitl = SITL()

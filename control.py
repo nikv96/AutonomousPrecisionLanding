@@ -24,6 +24,7 @@ import argparse
 #Global Variables
 x_pid = pid.pid(0.1, 0.005, 0.1, 50)
 y_pid = pid.pid(0.1, 0.005, 0.1, 50)
+z_pid = pid.pid(0.3, 0.005, 0.2, 50)
 hfov = 60
 hres = 640
 vfov = 60
@@ -31,8 +32,8 @@ vres = 480
 x_pre = 0
 y_pre = 0
 
-def pixels_per_meter(fov, res, alt):
-	return ( ( alt * math.tan(math.radians(fov/2)) ) / (res/2) )
+def get_cam_pitch():
+	return 0
 
 def land(vehicle, target, attitude, location):
 	if(vehicle.location.global_relative_frame.alt <= 2.7):
@@ -48,22 +49,22 @@ def move_to_target(vehicle,target,attitude,location):
 	x,y = target
 
 	alt = vehicle.location.global_relative_frame.alt
-	px_meter_x = pixels_per_meter(hfov, hres, alt)
-	px_meter_y = pixels_per_meter(vfov, vres, alt)
 
-	x *= px_meter_x
-	y *= px_meter_y
+	pitch_cam = math.radians(get_cam_pitch())
 
-	vx = x_pid.get_pid(x, 0.1)
-	vy = y_pid.get_pid(y, 0.1)
+	X = alt * math.tan( pitch_cam + math.atan( (x * math.tan( math.radians(hfov/2) ) )/ (hres/2) ) )
+	Y = alt * math.tan( pitch_cam + math.atan( (x * math.tan( math.radians(vfov/2) ) )/ (vres/2) ) )
+
+	vx = x_pid.get_pid(X, 0.1)
+	vy = -y_pid.get_pid(Y, 0.1)
 	
-	print("x = " + str(x))
+	print("x = " + str(X))
 	print("vx = " + str(vx))
-	print("y = " + str(y))
+	print("y = " + str(Y))
 	print("vy = " + str(vy))
 
-	if(math.sqrt(x**2 + y**2) > 2):
+	if(math.sqrt(X**2 + Y**2) > 2):
 		vz = 0
 	else:
-		vz = 0.2
+		vz = z_pid.get_pid(alt, 0.1)
 	send_velocity(vehicle, vy, vx, vz, 1)
