@@ -1,6 +1,6 @@
 '''
 
-    Synopsis: Script to obtain videos from webcam.
+    Synopsis: Script to obtain video from webcam.
     Author: Nikhil Venkatesh
     Contact: mailto:nikv96@gmail.com
 
@@ -18,7 +18,7 @@ cores_available = multiprocessing.cpu_count()
 def image_capture_background(imgcap_connection):
 	global cap, latest_image
         if imgcap_connection is None:
-            print ("image_capture failed because pipe is uninitialised")
+            print ("Image capture failed because pipe is uninitialised")
             return
 	
         latest_image = None
