@@ -1,8 +1,8 @@
 '''
 
     Synopsis: Script to simulate the drone's vision.
-    Author: Nikhil Venkatesh
-    Contact: mailto:nikv96@gmail.com
+    Author: Daniel Nugent
+    Code Available at https://github.com/djnugent/Precland/blob/master/PrecisionLand_lib/PL_sim.py used under the GNU license
 
 '''
 

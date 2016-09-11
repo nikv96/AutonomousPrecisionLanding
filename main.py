@@ -52,42 +52,42 @@ if __name__ == '__main__':
 	    connection_string = 'tcp:127.0.0.1:5760'
 	
 	print("Connecting to vehicle on: %s" % connection_string)
-	veh_control = connect(connection_string, wait_ready=True, baud=57600)
+	vehicle = connect(connection_string, wait_ready=True, baud=57600)
 	
 	if simulation:
-		veh_control.mode = VehicleMode("GUIDED")
+		vehicle.mode = VehicleMode("GUIDED")
 
 	while True:
-		if(veh_control.mode == "GUIDED"):
+		if(vehicle.mode == "GUIDED"):
 			break
 		time.sleep(0.1)
 	if(simulation):
 		print("Running simulation...")
 		sim.load_target('Resources/target.PNG')
 		print("Target loaded.")
-		target = LocationGlobalRelative(veh_control.location.global_relative_frame.lat+0.00002, veh_control.location.global_relative_frame.lon - 0.00002, veh_control.location.global_relative_frame.alt)
+		target = LocationGlobalRelative(vehicle.location.global_relative_frame.lat+0.00002, vehicle.location.global_relative_frame.lon - 0.00002, vehicle.location.global_relative_frame.alt)
 		sim.set_target_location(target)
 		print("Target set.")
-		arm_and_takeoff(veh_control, 10)
+		arm_and_takeoff(vehicle, 10)
 	else:
 		video.startCamera()
 
 	fourcc = cv2.cv.CV_FOURCC(*'XVID')
 	i = len([name for name in os.listdir('Logs/Vids')])
-	vid = cv2.VideoWriter('Logs/Vids/log'+str(i)+'.avi', fourcc, 30.0, (640, 480))
+	vid = cv2.VideoWriter('Logs/Vids/log'+str(i)+'.avi', fourcc, 10.0, (640, 480))
 
 	
 	while True:
-		if not (veh_control.mode == "GUIDED"):
+		if not (vehicle.mode == "GUIDED"):
 			if simulation:
 				break
 			else:
 				continue
-		if not (veh_control.armed):
+		if not (vehicle.armed):
 			break
-		location = veh_control.location.global_relative_frame
-		attitude = veh_control.attitude
-		print "Altitude =" + str(veh_control.location.global_relative_frame.alt)
+		location = vehicle.location.global_relative_frame
+		attitude = vehicle.attitude
+		print "Altitude =" + str(vehicle.location.global_relative_frame.alt)
 		
 		if simulation:
 			sim.refresh_simulator(location,attitude)
@@ -109,7 +109,7 @@ if __name__ == '__main__':
 		
 		img = imageQueue.get()
 		location, attitude = vehicleQueue.get()
-		rend_Image = search_image.add_target_highlights(img, results[3])
+		rend_Image = search_image.add_target_highlights(img, results[2])
 		
 		if simulation:
 			cv2.imshow("RAW", img)
@@ -117,12 +117,12 @@ if __name__ == '__main__':
 		
 		vid.write(rend_Image)
 
-		control.land(veh_control, results,attitude,location)
+		control.land(vehicle, results[1], attitude, location)
 		time.sleep(0.1)
 
 	vid.release()
 		
 	print("Closing vehicle")
-	veh_control.close()
+	vehicle.close()
 	if sitl is not None:
 		sitl.stop()

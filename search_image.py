@@ -18,13 +18,14 @@ import cv2
 import numpy as np
 
 #Global Variables
-cam_width = 640
-cam_height = 480
-cam_vfov = 48.7
-cam_hfov = 49.7
+hres = 640
+vres = 480
+vfov = 48.7
+hfov = 49.7
 target_cascade = cv2.CascadeClassifier(os.path.dirname(os.path.realpath(__file__))+"/Resources/target_cascade.xml")
 if target_cascade.empty():
 	exit()
+
 current_milli_time = lambda: int(round(time.time() * 1000))
 
 def analyze_frame(child_conn, img, location, attitude):
@@ -32,31 +33,20 @@ def analyze_frame(child_conn, img, location, attitude):
 	gray = img
 	if(len(gray.shape) < 3):
 		gray = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
+	
 	target = target_cascade.detectMultiScale(gray,1.1,5)
 	if len(target)>0:
-		center =(-1,-1)
+		center = (-1,-1)
+		distance = -1
 		for (x,y,w,h) in target:
-			center = (x+w/2,y+h/2)
-	        x_pixel = center[0] - (cam_width/2.0)
-	        y_pixel = center[1] - (cam_height/2.0)
-	        x_angle = x_pixel * (cam_hfov / cam_width) * (math.pi/180.0)
-	        y_angle = y_pixel * (cam_vfov / cam_height) * (math.pi/180.0)
-
-		x_pixel -= (cam_width / cam_hfov) * math.degrees(attitude.roll)
-		y_pixel += (cam_height / cam_vfov) * math.degrees(attitude.pitch)
-
-		thetaX = x_pixel * cam_hfov / cam_width
-		thetaY = y_pixel * cam_vfov / cam_height
-		x = location.alt * math.tan(math.radians(thetaX))
-		y = location.alt * math.tan(math.radians(thetaY))
-		target_heading = math.atan2(y,x) % (2*math.pi)
-		target_heading = (attitude.yaw - target_heading) 
-		distance = math.sqrt(x**2 + y**2)
+			x_true = x + w/2.0 - hres/2.0
+			y_true = -(y + h/2.0) + vres/2.0
+			center = (x_true, y_true)
 		stop = current_milli_time()
-		child_conn.send((stop-start, center, distance, target))
+		child_conn.send((stop-start, center, target))
 	else:
 		stop = current_milli_time()
-		child_conn.send((stop-start,None, -1, None))
+		child_conn.send((stop-start, None, None))
 
 def add_target_highlights(image, target):
 	img = copy(image)
