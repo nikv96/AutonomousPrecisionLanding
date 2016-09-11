@@ -66,3 +66,6 @@ target/
 
 #Mav
 *.tlog
+
+#Logs
+Logs/
