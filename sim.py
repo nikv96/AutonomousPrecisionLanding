@@ -20,7 +20,6 @@ from dronekit_sitl import SITL
 
 #Common Library Imports
 from position_vector import PositionVector
-import flight_assist
 
 #List of global variables
 targetLocation = PositionVector()
@@ -36,6 +35,8 @@ camera_hfov = 60
 camera_fov = math.sqrt(camera_vfov**2 + camera_hfov**2)
 camera_frameRate = 30
 current_milli_time = lambda: int(round(time.time() * 1000))
+a = 10
+d = 0
 
 def load_target(filename, actualS=1.5):
 	global target, target_width, target_height
@@ -48,7 +49,10 @@ def load_target(filename, actualS=1.5):
 	pixels_per_meter = (target_height + target_width) / (2.0 * actualSize)
 
 def set_target_location(location):
+	global init_x, init_y
 	targetLocation.set_from_location(location)
+	init_x = targetLocation.x
+	init_y = targetLocation.y
 
 def project_3D_to_2D(thetaX,thetaY,thetaZ, aX, aY,aZ, cX, cY, cZ, height, width, fov):
 	dX = math.cos(-thetaY) * (math.sin(-thetaZ)*(cY-aY) + math.cos(-thetaZ)*(cX-aX)) - math.sin(-thetaY)*(aZ-cZ)
@@ -112,10 +116,18 @@ def get_frame(vehicleAttitude):
 	return sim
 
 def refresh_simulator(vehicleLoc, vehicleAtt):
+	global d, init_x, init_y
 	vehicleLocation.set_from_location(vehicleLoc)
 	vehicleAttitude = vehicleAtt
+	sin2t = math.sin(d*math.pi/180)**2 + 1
+	x = (a * math.cos(d*math.pi/180))/sin2t + init_x
+	y = (a * math.cos(d*math.pi/180) * math.sin(d * math.pi/180))/sin2t + init_y
+	d = d + 3
+	targetLocation.x, targetLocation.y= x, y
 
 if __name__ == '__main__':
+	global init_x, init_y
+	import flight_assist
 	load_target(filename, target_size)
 	sitl = SITL()
 	sitl.download('copter', '3.3', verbose=True)
@@ -127,7 +139,7 @@ if __name__ == '__main__':
 
 	set_target_location(veh_control.location.global_relative_frame)
 
-	flightAssist.arm_and_takeoff(veh_control, 15)
+	flight_assist.arm_and_takeoff(veh_control, 30)
 
 	while (veh_control is not None):
 		location = veh_control.location.global_relative_frame
@@ -140,27 +152,27 @@ if __name__ == '__main__':
 		print key
 
 		if key == ord('w'):
-			flightAssist.send_ned_velocity(veh_control, 2, 0, 0, 1) #forward
+			flight_assist.send_ned_velocity(veh_control, 2, 0, 0, 1) #forward
 		elif key == ord('s'):
-			flightAssist.send_ned_velocity(veh_control, -2, 0, 0, 1) #backward
+			flight_assist.send_ned_velocity(veh_control, -2, 0, 0, 1) #backward
 		elif key == ord('a'):
-			flightAssist.send_ned_velocity(veh_control, 0, -2, 0, 1) #left
+			flight_assist.send_ned_velocity(veh_control, 0, -2, 0, 1) #left
 		elif key == ord('d'):
-			flightAssist.send_ned_velocity(veh_control, 0, 2, 0, 1) #right
+			flight_assist.send_ned_velocity(veh_control, 0, 2, 0, 1) #right
 		elif(key == ord('q')):
 			yaw = math.degrees(attitude.yaw) #yaw left
-			flightAssist.condition_yaw(veh_control, yaw-5)
+			flight_assist.condition_yaw(veh_control, yaw-5)
 		elif(key == ord('e')):
 			yaw = math.degrees(attitude.yaw) #yaw right
-			flightAssist.condition_yaw(veh_control,yaw + 5)
+			flight_assist.condition_yaw(veh_control,yaw + 5)
 		elif(key == ord('8')):
-			flightAssist.send_ned_velocity(veh_control, 0, 0, -2, 1) #down
+			flight_assist.send_ned_velocity(veh_control, 0, 0, -2, 1) #down
 		elif(key == ord('2')):
-			flightAssist.send_ned_velocity(veh_control, 0,0,2, 1) #up
+			flight_assist.send_ned_velocity(veh_control, 0,0,2, 1) #up
 		elif (key == ord('1')):
 			break
 		else:
-			flightAssist.send_ned_velocity(veh_control,0,0,0,1) #still
+			flight_assist.send_ned_velocity(veh_control,0,0,0,1) #still
 	
 	print("Returning to Launch")
 	veh_control.mode = VehicleMode("RTL")

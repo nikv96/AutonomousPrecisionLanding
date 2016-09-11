@@ -23,9 +23,9 @@ class PositionVector(object):
 
     def __init__(self,initial_x=0,initial_y=0,initial_z=0):
         # default config file
-	posvec_home_location = LocationGlobalRelative(0,0,0)
-	posvec_lon_scale = 1.0
-	posvec_latlon_to_m = 111319.5
+    	posvec_home_location = LocationGlobalRelative(0,0,0)
+    	posvec_lon_scale = 1.0
+    	posvec_latlon_to_m = 111319.5
         self.x = initial_x
         self.y = initial_y
         self.z = initial_z
@@ -128,21 +128,21 @@ class PositionVector(object):
 
     # main - used to test the class
     def main(self):
-	# set home position - to tridge's home field (this is just for testing anyway)
-	PositionVector.set_home_location(LocationGlobalRelative(-35.362938,149.165085,0))
-	print "Home %s" % PositionVector.get_home_location()
-	home_pos = PositionVector(0,0,0)
-	print "Home %s" % home_pos
+    	# set home position - to tridge's home field (this is just for testing anyway)
+    	PositionVector.set_home_location(LocationGlobalRelative(-35.362938,149.165085,0))
+    	print "Home %s" % PositionVector.get_home_location()
+    	home_pos = PositionVector(0,0,0)
+    	print "Home %s" % home_pos
 
-	# other position
-	other_pos = PositionVector.get_from_location(PositionVector.get_home_location())
-	print "Other %s" % other_pos
+    	# other position
+    	other_pos = PositionVector.get_from_location(PositionVector.get_home_location())
+    	print "Other %s" % other_pos
 
-	# set vehicle to be 10m north, 10m east and 10m above home
-	veh_pos = PositionVector(10,10,10)
-	print "Vehicle %s" % veh_pos.get_location()
-	print "Vehicle %s" % veh_pos
-	print "Distance from home: %f" % PositionVector.get_distance_xyz(home_pos,veh_pos)
+    	# set vehicle to be 10m north, 10m east and 10m above home
+    	veh_pos = PositionVector(10,10,10)
+    	print "Vehicle %s" % veh_pos.get_location()
+    	print "Vehicle %s" % veh_pos
+    	print "Distance from home: %f" % PositionVector.get_distance_xyz(home_pos,veh_pos)
 
 
 # run the main routine if this is file is called from the command line
