@@ -33,9 +33,6 @@ if __name__ == '__main__':
 	simulation = False
 	sitl = None
 	parent_conn_im, child_conn_im = multiprocessing.Pipe()
-	imageQueue = Queue.Queue()
-	vehicleQueue = Queue.Queue()
-	frame_count =0
 
 	parser = argparse.ArgumentParser(description='Commands vehicle using vehicle.simple_goto.')
 	parser.add_argument('--connect', help="Vehicle connection target string. If not specified, SITL automatically started and used.")
@@ -96,28 +93,28 @@ if __name__ == '__main__':
 		else:
 			frame = video.get_frame()
 
-		imageQueue.put(frame)
-		vehicleQueue.put((location,attitude))
-
 		img = multiprocessing.Process(name="img",target=search_image.analyze_frame, args = (child_conn_im, frame, location, attitude))
 		img.daemon = True
 		img.start()
 
-		results = parent_conn_im.recv()
-		
-		frame_count += 1
-		
-		img = imageQueue.get()
-		location, attitude = vehicleQueue.get()
-		rend_Image = search_image.add_target_highlights(img, results[2])
+		try:
+			if parent_conn_im.poll(2):
+				image_data = parent_conn_im.recv()
+			else:
+				img.terminate()
+				raise Exception
+		except Exception as e:
+			continue
+
+		rend_Image = search_image.add_target_highlights(frame, image_data[2])
 		
 		if simulation:
-			cv2.imshow("RAW", img)
+			cv2.imshow("RAW", frame)
 			cv2.imshow("GUI", rend_Image)
 		
 		vid.write(rend_Image)
 
-		control.land(vehicle, results[1], attitude, location)
+		control.land(vehicle, image_data[1], attitude, location)
 		time.sleep(0.1)
 
 	vid.release()
