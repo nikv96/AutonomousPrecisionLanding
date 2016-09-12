@@ -29,13 +29,13 @@ hfov = 60
 hres = 640
 vfov = 60
 vres = 480
-x_pre = 0
-y_pre = 0
+climb_count = 0 
 
 def get_cam_pitch():
 	return 0
 
 def land(vehicle, target, attitude, location):
+	global climb_count, x_pid, y_pid, z_pid
 	if(vehicle.location.global_relative_frame.alt <= 2.7):
 		vehicle.mode = VehicleMode('LAND')
 	if(target is not None):
@@ -43,6 +43,12 @@ def land(vehicle, target, attitude, location):
 	elif(vehicle.location.global_relative_frame.alt > 30):
 		vehicle.mode = VehicleMode('LAND')
 	else:
+		climb_count += 1
+		if climb_count == 3:
+			climb_count = 0
+			x_pid = pid.pid(0.1, 0.005, 0.1, 50)
+			y_pid = pid.pid(0.1, 0.005, 0.1, 50)
+			z_pid = pid.pid(0.2, 0.005, 0.1, 50)
 		send_velocity(vehicle, 0, 0, -0.5, 1)
 		
 def move_to_target(vehicle,target,attitude,location):
@@ -63,7 +69,7 @@ def move_to_target(vehicle,target,attitude,location):
 	print("y = " + str(Y))
 	print("vy = " + str(vy))
 
-	if(math.sqrt(X**2 + Y**2) > 2):
+	if(math.sqrt(X**2 + Y**2) > 4):
 		vz = 0
 	else:
 		vz = z_pid.get_pid(alt, 0.1)
