@@ -64,8 +64,10 @@ def get_frame():
         parent_conn.send(img_counter)
         img_counter = img_counter + 1
         img = parent_conn.recv()
+	img = cv2.resize(img, (200,150))
     else:
         success_flag, img= cap.read()
+	img = cv2.resize(img, (200,150))
 
     return img
 
