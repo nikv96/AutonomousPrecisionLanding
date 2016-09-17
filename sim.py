@@ -13,6 +13,7 @@ import numpy as np
 #Python Imports
 import math
 import time
+import os
 
 #Dronekit Imports
 from dronekit import VehicleMode, Attitude, connect, LocationGlobalRelative
@@ -27,7 +28,7 @@ targetLocation = PositionVector()
 vehicleLocation = PositionVector()
 vehicleAttitude = 0
 backgroundColor = (74,88,109)
-filename = (os.path.dirname(os.path.realpath(__file__))+"/Resources/target.PNG"
+filename = (os.path.dirname(os.path.realpath(__file__)))+"/Resources/target.PNG"
 target_size = 1.5
 camera_width = 640
 camera_height = 480

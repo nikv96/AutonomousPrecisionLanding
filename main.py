@@ -63,7 +63,7 @@ if __name__ == '__main__':
 		time.sleep(0.1)
 	if(simulation):
 		print("Running simulation...")
-		sim.load_target((os.path.dirname(os.path.realpath(__file__))+'/Resources/target.PNG')
+		sim.load_target((os.path.dirname(os.path.realpath(__file__)))+'/Resources/target.PNG')
 		print("Target loaded.")
 		target = LocationGlobalRelative(vehicle.location.global_relative_frame.lat+0.00002, vehicle.location.global_relative_frame.lon - 0.00002, vehicle.location.global_relative_frame.alt)
 		sim.set_target_location(target)
@@ -73,8 +73,8 @@ if __name__ == '__main__':
 		video.startCamera()
 
 	fourcc = cv2.cv.CV_FOURCC(*'XVID')
-	i = len([name for name in os.listdir((os.path.dirname(os.path.realpath(__file__))+'/Logs/Vids')])
-	vid = cv2.VideoWriter((os.path.dirname(os.path.realpath(__file__))+'/Logs/Vids/log'+str(i)+'.avi', fourcc, 10.0, (640, 480))
+	i = len([name for name in os.listdir((os.path.dirname(os.path.realpath(__file__)))+'/Logs/Vids')])
+	vid = cv2.VideoWriter((os.path.dirname(os.path.realpath(__file__)))+'/Logs/Vids/log'+str(i)+'.avi', fourcc, 10.0, (640, 480))
 
 	
 	while True:
