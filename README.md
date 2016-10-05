@@ -3,7 +3,7 @@ Autonomously landing a drone on a moving target using visual navigation. This pr
 
 ## Install Dependencies
 1. Install Python 2.7 [here](https://www.python.org/download/releases/2.7/).
-2. Install Python-Opencv 2.4.9 from [here](http://opencv.org/downloads.html). To install follow the instructions [here](http://docs.opencv.org/2.4/doc/tutorials/introduction/linux_install/linux_install.html#linux-installation).
+2. Install OpenCV-python 3.1.0 from [here](http://opencv.org/downloads.html).
 3. Install Dronekit from [here](http://python.dronekit.io/guide/quick_start.html).
 
 ## How To Run
