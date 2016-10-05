@@ -28,6 +28,7 @@ import time
 import argparse
 import Queue
 import os
+import re
 
 if __name__ == '__main__':	
 	simulation = False
@@ -72,7 +73,11 @@ if __name__ == '__main__':
 	else:
 		video.startCamera()
 
-	fourcc = cv2.cv.CV_FOURCC(*'XVID')
+	if ((re.compile("3*")).match(cv2.__version__)):
+		fourcc = cv2.VideoWriter_fourcc(*'XVID')
+	else:
+		fourcc = cv2.cv.CV_FOURCC(*'XVID')
+		
 	i = len([name for name in os.listdir((os.path.dirname(os.path.realpath(__file__)))+'/Logs/Vids')])
 	vid = cv2.VideoWriter((os.path.dirname(os.path.realpath(__file__)))+'/Logs/Vids/log'+str(i)+'.avi', fourcc, 10.0, (640, 480))
 
