@@ -26,27 +26,46 @@ target_cascade = cv2.CascadeClassifier(os.path.dirname(os.path.realpath(__file__
 if target_cascade.empty():
 	exit()
 
+def is_cv2():
+    return check_opencv_version("2.",)
+ 
+def is_cv3():
+    return check_opencv_version("3.")
+ 
+def check_opencv_version(major):
+    return cv2.__version__.startswith(major)
+
 current_milli_time = lambda: int(round(time.time() * 1000))
 
 def analyze_frame(child_conn, img, location, attitude):
-	start = current_milli_time()
-	gray = img
-	if(len(gray.shape) < 3):
-		gray = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
-	
-	target = target_cascade.detectMultiScale(gray,1.1,5)
-	if len(target)>0:
-		center = (-1,-1)
-		distance = -1
-		for (x,y,w,h) in target:
-			x_true = x + w/2.0 - hres/2.0
-			y_true = -(y + h/2.0) + vres/2.0
-			center = (x_true, y_true)
-		stop = current_milli_time()
-		child_conn.send((stop-start, center, target))
+	t1 = time.time()
+	frame = img
+	hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
+	color = cv2.inRange(hsv,np.array([100,50,50]),np.array([140,255,255]))
+	image_mask=color
+	element = cv2.getStructuringElement(cv2.MORPH_RECT,(3,3))
+	image_mask = cv2.erode(image_mask,element, iterations=2)
+	image_mask = cv2.dilate(image_mask,element,iterations=2)
+	image_mask = cv2.erode(image_mask,element)
+	if is_cv2():
+		contours, hierarchy = cv2.findContours(image_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 	else:
-		stop = current_milli_time()
-		child_conn.send((stop-start, None, None))
+		_, contours, hierarchy = cv2.findContours(image_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+	maximumArea = 0
+	bestContour = None
+	for contour in contours:
+		currentArea = cv2.contourArea(contour)
+		if currentArea > maximumArea:
+			bestContour = contour
+			maximumArea = currentArea
+	if bestContour is not None:
+		x,y,w,h = cv2.boundingRect(bestContour)
+		center = (x + w/2.0 - hres/2.0, -(y + h/2.0) + vres/2.0)
+		t2 = time.time()
+		child_conn.send((t2-t1, center, (x,y,w,h)))
+	else:
+		t2 = time.time()
+		child_conn.send((t2-t1, None, None))
 
 def add_target_highlights(image, target):
 	img = copy(image)
@@ -54,8 +73,8 @@ def add_target_highlights(image, target):
 		img = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
 
 	if target is not None:
-		for (x,y,w,h) in target:
-			cv2.rectangle(img,(x,y),(x+w,y+h),(255,0,0),2)
+		x, y, w, h = target
+		cv2.rectangle(img, (x,y),(x+w,y+h), (0,0,255), 3)
 	return img
 
 if __name__ == "__main__":

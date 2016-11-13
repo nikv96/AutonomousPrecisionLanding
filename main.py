@@ -30,6 +30,15 @@ import Queue
 import os
 import re
 
+def is_cv2():
+    return check_opencv_version("2.",)
+ 
+def is_cv3():
+    return check_opencv_version("3.")
+ 
+def check_opencv_version(major):
+    return cv2.__version__.startswith(major)
+
 if __name__ == '__main__':	
 	simulation = False
 	sitl = None
@@ -73,23 +82,22 @@ if __name__ == '__main__':
 	else:
 		video.startCamera()
 
-	if ((re.compile("3*")).match(cv2.__version__)):
+	if is_cv3():
 		fourcc = cv2.VideoWriter_fourcc(*'XVID')
 	else:
 		fourcc = cv2.cv.CV_FOURCC(*'XVID')
 		
 	i = len([name for name in os.listdir((os.path.dirname(os.path.realpath(__file__)))+'/Logs/Vids')])
 	vid = cv2.VideoWriter((os.path.dirname(os.path.realpath(__file__)))+'/Logs/Vids/log'+str(i)+'.avi', fourcc, 10.0, (640, 480))
-
 	
 	while True:
+		if not (vehicle.armed):
+			break
 		if not (vehicle.mode == "GUIDED"):
 			if simulation:
 				break
 			else:
 				continue
-		if not (vehicle.armed):
-			break
 		location = vehicle.location.global_relative_frame
 		attitude = vehicle.attitude
 		print "Altitude =" + str(vehicle.location.global_relative_frame.alt)
@@ -108,7 +116,14 @@ if __name__ == '__main__':
 		img.daemon = True
 		img.start()
 
-		results = parent_conn_im.recv()
+		try:
+			if parent_conn_im.poll(4):
+				results = parent_conn_im.recv()
+			else:
+				img.terminate()
+				raise Exception
+		except Exception as e:
+			continue
 		
 		frame_count += 1
 		

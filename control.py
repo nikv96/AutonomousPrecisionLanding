@@ -15,6 +15,7 @@ from flight_assist import send_velocity
 from position_vector import PositionVector
 import pid
 import sim
+#import epm
 
 #Python Imports
 import math
@@ -30,17 +31,27 @@ vfov = 60
 vres = 480
 x_pre = 0
 y_pre = 0
+simulation = False
+if simulation:
+	epm_object = epm.EPM()
 
 def pixels_per_meter(fov, res, alt):
 	return ( ( alt * math.tan(math.radians(fov/2)) ) / (res/2) )
 
 def land(vehicle, target, attitude, location):
-	if(vehicle.location.global_relative_frame.alt <= 2.7):
-		vehicle.mode = VehicleMode('LAND')
+	if(vehicle.location.global_relative_frame.alt <= 0.15):
+		send_velocity(vehicle, 0, 0, 0, 1)
+		time.sleep(10)
+		vehicle.mode = VehicleMode('RTL')
+		return
+	elif(vehicle.location.global_relative_frame.alt <= 0.3):
+		if simulation:
+			epm_object.on()
+		return
 	if(target is not None):
 		move_to_target(vehicle,target,attitude,location)
 	elif(vehicle.location.global_relative_frame.alt > 30):
-		vehicle.mode = VehicleMode('LAND')
+		vehicle.mode = VehicleMode('RTL')
 	else:
 		send_velocity(vehicle, 0, 0, -0.25, 1)
 		
